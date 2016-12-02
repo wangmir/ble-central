@@ -27,8 +27,6 @@
 
 #include <uv.h>
 
-#include "module/iotjs_module_blecentral.h"
-
 #define HCI_STATE_NONE 0
 #define HCI_STATE_OPEN 2
 #define HCI_STATE_SCANNING 3
@@ -357,6 +355,23 @@ void __do_stop_scanning(struct hci_state *_hci_state) {
 
 
 #if C_UNIT_TEST
+
+void main(int argc, char *argv[]){
+
+  struct hci_state *hci = malloc(sizeof(struct hci_state));
+
+  __open_default_hci_device(hci);
+
+  __do_start_scanning(hci);
+
+  while(!hci->has_error){
+
+    poll(hci);
+  }
+  __do_stop_scanning(hci);
+  return;
+
+}
 #else
 void BlecentralDestroy(){
 
