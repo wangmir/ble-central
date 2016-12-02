@@ -72,8 +72,6 @@ const iotjs_jval_t *iotjs_blecentral_reqwrap_jcallback(THIS);
 iotjs_blecentral_reqdata_t *iotjs_blecentral_reqwrap_data(THIS);
 iotjs_blecentral_reqwrap_t *
 iotjs_blecentral_reqwrap_from_request(uv_work_t *req);
-void *iotjs_blecentral_req_get_userdata(uv_work_t *req);
-void iotjs_blecentral_req_set_userdata(uv_work_t *req, void *data);
 #undef THIS
 
 void iotjs_blecentral_event_callback(BlecentralEv ev, void *args);
