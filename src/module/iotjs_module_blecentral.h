@@ -43,11 +43,6 @@ typedef struct {
 } iotjs_blecentral_reqdata_t;
 
 typedef struct {
-  char **svc_uuids;
-  int allow_duplicates;
-} iotjs_blecentral_start_scanning_param_t;
-
-typedef struct {
   iotjs_reqwrap_t reqwrap;
   uv_work_t req;
   iotjs_blecentral_reqdata_t req_data;
@@ -57,6 +52,23 @@ typedef struct {
   iotjs_jobjectwrap_t jobjectwrap;
   void *platform_handle;
 } IOTJS_VALIDATED_STRUCT(iotjs_blecentral_t);
+
+typedef struct {
+  char *state;
+} iotjs_blecentral_state_change_res_t;
+
+typedef struct {  
+  uint8_t allow_duplicate;
+} iotjs_blecentral_scan_start_res_t;
+
+typedef struct {
+  char *uuid;
+  char *address;
+  uint8_t addr_type;
+  uint8_t connectable;
+  char *local_name;
+  uint8_t rssi;
+} iotjs_blecentral_discover_res_t;
 
 iotjs_blecentral_t *iotjs_blecentral_create(const iotjs_jval_t *jble_central);
 const iotjs_jval_t *iotjs_blecentral_get_jblecentral();

@@ -14,6 +14,7 @@
  */
 
 #include "iotjs_module_blecentral.h"
+#include "iotjs_string.h"
 
 static void iotjs_blecentral_destroy(iotjs_blecentral_t *instance) {
   IOTJS_VALIDATED_STRUCT_DESTRUCTOR(iotjs_blecentral_t, instance);
@@ -108,27 +109,85 @@ iotjs_blecentral_reqwrap_from_request(uv_work_t *req) {
 void iotjs_blecentral_event_callback(BlecentralEv ev, void *args) {
   const iotjs_jval_t *obj = iotjs_blecentral_get_jblecentral();
   iotjs_jval_t func = iotjs_jval_get_property(obj, "onEvent");
+  iotjs_string_t jstr_ev;
   iotjs_jargs_t argv;
+
   switch (ev) {
     case kBlecentralEvStateChange:
-      //Example Code:
-      argv = iotjs_jargs_create(1);
-      int state = 1;
-      iotjs_jargs_append_number(&argv, (double) state);
+      iotjs_blecentral_state_change_res_t *res =
+          (iotjs_blecentral_state_change_res_t *)args;
+      
+      argv = iotjs_jargs_create(2);
+      
+      jstr_ev = iotjs_string_create("statChange");
+      iotjs_string_t jstr_state = 
+          iotjs_string_create((const char*)res->state);
+
+      iotjs_jargs_append_string(&argv, &jstr_ev);
+      iotjs_jargs_append_string(&argv, &jsr_state);
+
+      iotjs_make_callback(&func, obj, &argv);
+
+      iotjs_string_destroy(&jsr_ev);
+      iotjs_string_destroy(&jsr_state);
+
       break;
     case kBlecentralEvScanStart:
-      argv = iotjs_jargs_create(0);
+      argv = iotjs_jargs_create(1);
+
+      jstr_ev = iotjs_string_create("scanStart");
+      iotjs_jargs_append_string(&argv, &jstr_ev);
+
+      iotjs_make_callback(&func, obj, &argv);
+
+      iotjs_string_destroy(&jstr_ev);
+
       break;
     case kBlecentralEvScanStop:
-      argv = iotjs_jargs_create(0);
+      argv = iotjs_jargs_create(1);
+
+      jstr_ev = iotjs_string_create("scanStop");
+      iotjs_jargs_append_string(&argv, &jstr_ev);
+
+      iotjs_make_callback(&func, obj, &argv);
+
+      iotjs_string_destroy(&jstr_ev);
+
       break;
     case kBlecentralEvDiscover:
-      //Example Code:
-      argv = iotjs_jargs_create(5);
+      iotjs_blecentral_discover_res_t *res =
+          (iotjs_blecentral_discover_res_t *)args;
+      argv = iotjs_jargs_create(7);
+
+      jstr_ev = iotjs_string_create("discover");
+      iotjs_string_t juuid = 
+          iotjs_string_create((const char *)res->uuid);
+      iotjs_string_t jaddr =
+          iotjs_string_create((const char *)res->address);
+      iotjs_string_t jaddr_type =
+          iotjs_string_create((res->addr_type == 1)? "random" : "public");
+      iotjs_string_t jlocal_name =
+          iotjs_string_create((const char *)res->local_name);
+
+      iotjs_jargs_append_string(&argv, &jstr_ev);
+      iotjs_jargs_append_string(&argv, &juuid);
+      iotjs_jargs_append_string(&argv, &jaddr);
+      iotjs_jargs_append_string(&argv, &jaddr_type);
+      iotjs_jargs_append_number(&argv, res->connnectable);
+      iotjs_jargs_append_string(&argv, &jlocal_name);
+      iotjs_jargs_append_number(&argv, res->rssi);
+
+      iotjs_make_callback(&func, obj, &argv);
+
+      iotjs_string_destroy(&jstr_ev);
+      iotjs_string_destroy(&juuid);
+      iotjs_string_destroy(&jaddr);
+      iotjs_string_destroy(&jaddr_type);
+      iotjs_string_destroy(&jlocal_name);
+
       break;
   }
 
-  iotjs_make_callback(&func, obj, &argv);
 
   iotjs_jargs_destroy(&argv);
 }
