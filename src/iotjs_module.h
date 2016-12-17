@@ -36,6 +36,7 @@ typedef iotjs_jval_t (*register_func)();
 #define MAP_MODULE_LIST(F)                 \
   E(F, ADC, Adc, adc)                      \
   E(F, BLE, Ble, ble)                      \
+  E(F, BLECENTRAL, Blecentral, blecentral) \
   E(F, BUFFER, Buffer, buffer)             \
   E(F, CONSOLE, Console, console)          \
   E(F, CONSTANTS, Constants, constants)    \
