@@ -23,7 +23,7 @@
 
 
 iotjs_blecentral_reqwrap_t* iotjs_blecentral_reqwrap_create(
-    const iotjs_jval_t* jcallback, BleCentralOp op) {
+    const iotjs_jval_t* jcallback, BlecentralOp op) {
   iotjs_blecentral_reqwrap_t* blecentral_reqwrap =
       IOTJS_ALLOC(iotjs_blecentral_reqwrap_t);
   IOTJS_VALIDATED_STRUCT_CONSTRUCTOR(iotjs_blecentral_reqwrap_t,
@@ -41,7 +41,7 @@ static void iotjs_blecentral_reqwrap_destroy(THIS) {
   IOTJS_VALIDATED_STRUCT_DESTRUCTOR(iotjs_blecentral_reqwrap_t,
                                     blecentral_reqwrap);
   iotjs_reqwrap_destroy(&_this->reqwrap);
-  IOTJS_RELEASE(ble_reqwrap);
+  IOTJS_RELEASE(blecentral_reqwrap);
 }
 
 
@@ -99,7 +99,7 @@ static void iotjs_blecentral_destroy(iotjs_blecentral_t* blecentral) {
 
 
 const iotjs_jval_t* iotjs_blecentral_get_jblecentral() {
-  return iotjs_module_get(MODULE_BLE);
+  return iotjs_module_get(MODULE_BLECENTRAL);
 }
 
 
@@ -108,6 +108,18 @@ iotjs_blecentral_t* iotjs_blecentral_get_instance() {
   iotjs_jobjectwrap_t* jobjectwrap =
       iotjs_jobjectwrap_from_jobject(jblecentral);
   return (iotjs_blecentral_t*)jobjectwrap;
+}
+
+void *iotjs_blecentral_get_platform_handle() {
+  iotjs_blecentral_t *blecentral = iotjs_blecentral_get_instance();
+  IOTJS_VALIDATED_STRUCT_METHOD(iotjs_blecentral_t, blecentral);
+  return _this->platform_handle;
+}
+
+void iotjs_blecentral_set_platform_handle(void *handle) {
+  iotjs_blecentral_t *blecentral = iotjs_blecentral_get_instance();
+  IOTJS_VALIDATED_STRUCT_METHOD(iotjs_blecentral_t, blecentral);
+  _this->platform_handle = handle;
 }
 
 void afterWork(uv_work_t* work_req, int status) {
@@ -126,76 +138,76 @@ void afterWork(uv_work_t* work_req, int status) {
     iotjs_jval_destroy(&error);
   } else {
     switch (req_data->op) {
-      case kBleCentralOpInit: {
+      case kBlecentralOpInit: {
         jargs = iotjs_jargs_create(1);
 
-        if (req_data->state == kBleCentralStatePoweredOn) {
+        if (req_data->state == kBlecentralStatePoweredOn) {
           iotjs_jargs_append_string_raw(&jargs, "poweredOn");
-        } else if (req_data->state == kBleCentralStatePoweredOff) {
+        } else if (req_data->state == kBlecentralStatePoweredOff) {
           iotjs_jargs_append_string_raw(&jargs, "poweredOff");
-        } else if (req_data->state == kBleCentralStateUnauthorized) {
+        } else if (req_data->state == kBlecentralStateUnauthorized) {
           iotjs_jargs_append_string_raw(&jargs, "unauthorized");
-        } else if (req_data->state == kBleCentralStateUnsupported) {
+        } else if (req_data->state == kBlecentralStateUnsupported) {
           iotjs_jargs_append_string_raw(&jargs, "unsupported");
         } else {
           iotjs_jargs_append_string_raw(&jargs, "unknown");
         }
         break;
       }
-      case kBleCentralOpStartScanning: {
+      case kBlecentralOpStartScanning: {
         jargs = iotjs_jargs_create(1);
 
         iotjs_jargs_append_null(&jargs);
         break;
       }
-      case kBleCentralOpStopScanning: {
+      case kBlecentralOpStopScanning: {
         jargs = iotjs_jargs_create(1);
 
         iotjs_jargs_append_null(&jargs);
         break;
       }
-      case kBleCentralOpRunLoop: {
-        if (req_data->cmd == kBleCentralCmdStateChange) {
+      case kBlecentralOpRunLoop: {
+        if (req_data->cmd == kBlecentralCmdStateChange) {
           // args = state
           jargs = iotjs_jargs_create(1);
-          if (req_data->state == kBleCentralStatePoweredOn) {
+          if (req_data->state == kBlecentralStatePoweredOn) {
             iotjs_jargs_append_string_raw(&jargs, "poweredOn");
-          } else if (req_data->state == kBleCentralStatePoweredOff) {
+          } else if (req_data->state == kBlecentralStatePoweredOff) {
             iotjs_jargs_append_string_raw(&jargs, "poweredOff");
-          } else if (req_data->state == kBleCentralStateUnauthorized) {
+          } else if (req_data->state == kBlecentralStateUnauthorized) {
             iotjs_jargs_append_string_raw(&jargs, "unauthorized");
-          } else if (req_data->state == kBleCentralStateUnsupported) {
+          } else if (req_data->state == kBlecentralStateUnsupported) {
             iotjs_jargs_append_string_raw(&jargs, "unsupported");
           } else {
             iotjs_jargs_append_string_raw(&jargs, "unknown");
           }
-        } else if (req_data->cmd == kBleCentralCmdAdvertisingReport) {
+        } else if (req_data->cmd == kBlecentralCmdAdvertisingReport) {
           // args = status, type, address, addressType, eir, rssi
           jargs = iotjs_jargs_create(6);
           // status
-          iotjs_jarg_append_number(&jargs, 0);
+          iotjs_jargs_append_number(&jargs, 0);
           // type
-          iotjs_jarg_append_number(&jargs, req_data->type);
+          iotjs_jargs_append_number(&jargs, req_data->type);
           // address (length is 18)
           iotjs_string_t address =
               iotjs_string_create_with_size(req_data->address, 18);
-          iotjs_jarg_append_string(&jargs, &address);
+          iotjs_jargs_append_string(&jargs, &address);
           // addressType
           if (req_data->addressType) {
-            iotjs_jarg_append_string_raw(&jargs, "random");
+            iotjs_jargs_append_string_raw(&jargs, "random");
           } else {
-            iotjs_jarg_append_string_raw(&jargs, "public");
+            iotjs_jargs_append_string_raw(&jargs, "public");
           }
           // eir
           iotjs_string_t eir =
               iotjs_string_create_with_size(req_data->eir,
                                             req_data->eir_length);
-          iotjs_jarg_append_string(&jargs, &eir);
+          iotjs_jargs_append_string(&jargs, &eir);
           // rssi
-          iotjs_jarg_append_number(&jargs, req_data->rssi);
+          iotjs_jargs_append_number(&jargs, req_data->rssi);
         }
 
-        // kBleCentralCmdScanStart, kBleCentralCmdScanStop is not implemented
+        // kBlecentralCmdScanStart, kBlecentralCmdScanStop is not implemented
         // yet
 
         break;
@@ -228,9 +240,9 @@ JHANDLER_FUNCTION(Init) {
   const iotjs_jval_t* jcallback = JHANDLER_GET_ARG(0, function);
 
   iotjs_blecentral_reqwrap_t* req_wrap =
-      iotjs_blecentral_reqwrap_create(jcallback, kBleOpInit);
+      iotjs_blecentral_reqwrap_create(jcallback, kBlecentralOpInit);
 
-  BLE_ASYNC(Init);
+  BLECENTRAL_ASYNC(Init);
 
   iotjs_jhandler_return_null(jhandler);
 }
@@ -241,14 +253,14 @@ JHANDLER_FUNCTION(StartScanning) {
   const iotjs_jval_t* jcallback = JHANDLER_GET_ARG(1, function);
 
   iotjs_blecentral_reqwrap_t* req_wrap =
-      iotjs_blecentral_reqwrap_create(jcallback, kBleOpStartScanning);
+      iotjs_blecentral_reqwrap_create(jcallback, kBlecentralOpStartScanning);
 
   iotjs_blecentral_reqdata_t* req_data =
       iotjs_blecentral_reqwrap_data(req_wrap);
 
   req_data->duplicates = JHANDLER_GET_ARG(0, number);
 
-  BLE_ASYNC(StartScanning);
+  BLECENTRAL_ASYNC(StartScanning);
 
   iotjs_jhandler_return_null(jhandler);
 }
@@ -259,12 +271,12 @@ JHANDLER_FUNCTION(StopScanning) {
   const iotjs_jval_t* jcallback = JHANDLER_GET_ARG(0, function);
 
   iotjs_blecentral_reqwrap_t* req_wrap =
-      iotjs_blecentral_reqwrap_create(jcallback, kBleOpStopAdvertising);
+      iotjs_blecentral_reqwrap_create(jcallback, kBlecentralOpStopScanning);
 
   iotjs_blecentral_reqdata_t* req_data =
       iotjs_blecentral_reqwrap_data(req_wrap);
 
-  BLE_ASYNC(StopScanning);
+  BLECENTRAL_ASYNC(StopScanning);
 
   iotjs_jhandler_return_null(jhandler);
 }
@@ -275,17 +287,17 @@ JHANDLER_FUNCTION(RunLoop) {
   const iotjs_jval_t* jcallback = JHANDLER_GET_ARG(0, function);
 
   iotjs_blecentral_reqwrap_t* req_wrap =
-      iotjs_blecentral_reqwrap_create(jcallback, kBleOpRunBleLoop);
+      iotjs_blecentral_reqwrap_create(jcallback, kBlecentralOpRunLoop);
 
   iotjs_blecentral_reqdata_t* req_data =
       iotjs_blecentral_reqwrap_data(req_wrap);
 
-  BLE_ASYNC(RunLoop);
+  BLECENTRAL_ASYNC(RunLoop);
 
   iotjs_jhandler_return_null(jhandler);
 }
 
-iotjs_jval_t InitBleCentral() {
+iotjs_jval_t InitBlecentral() {
   iotjs_jval_t jblecentral = iotjs_jval_create_object();
 
   iotjs_jval_set_method(&jblecentral, "init", Init);

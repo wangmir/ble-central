@@ -30,6 +30,8 @@
 #include <bluetooth/hci.h>
 #include <bluetooth/hci_lib.h>
 
+#include "module/iotjs_module_blecentral.h"
+
 #define HCI_STATE_NONE 0
 #define HCI_STATE_OPEN 2
 #define HCI_STATE_SCANNING 3
@@ -40,9 +42,7 @@
 #define TRUE 1
 #define FALSE 0
 
-struct
-
-    struct hci_state {
+struct hci_state {
   int device_id;
   int device_handle;
   struct hci_filter of;
@@ -113,7 +113,7 @@ void _LoopWorker(struct hci_state *_hci_state) {
           _hci_state->req_data->type = type;
           _hci_state->req_data->address = addr;
           _hci_state->req_data->addressType = address_type;
-          _hci_state->req_data->eir = info->data;
+          _hci_state->req_data->eir = (char *)info->data;
           _hci_state->req_data->rssi = rssi;
         }
       }
@@ -129,17 +129,17 @@ void _LoopWorker(struct hci_state *_hci_state) {
             _hci_state->state == HCI_STATE_FILTERING) {
           if (!enable) {
             // scan stop
-            _hci_state->req_data->cmd = kBleCentralCmdScanStop;
+            _hci_state->req_data->cmd = kBlecentralCmdScanStop;
 
           } else if (duplicates != _hci_state->_scan_duplicates) {
             // duplicates changed
             _hci_state->_scan_duplicates = duplicates;
-            _hci_state->req_data->cmd = kBleCentralCmdScanStart;
+            _hci_state->req_data->cmd = kBlecentralCmdScanStart;
             _hci_state->req_data->duplicates = duplicates;
           }
         } else if ((_hci_state->state == HCI_STATE_OPEN) && enable) {
           // scan started
-          _hci_state->req_data->cmd = kBleCentralCmdScanStart;
+          _hci_state->req_data->cmd = kBlecentralCmdScanStart;
           _hci_state->req_data->duplicates = duplicates;
         }
       }
@@ -155,7 +155,7 @@ void __open_default_hci_device(struct hci_state *_hci_state) {
     _hci_state->has_error = TRUE;
     snprintf(_hci_state->error_message, sizeof(_hci_state->error_message),
              "Could not open device: %s", strerror(errno));
-    _hci_state->req_data->state = kBleCentralStateUnknown;
+    _hci_state->req_data->state = kBlecentralStateUnknown;
     return;
   }
 
@@ -165,13 +165,13 @@ void __open_default_hci_device(struct hci_state *_hci_state) {
     _hci_state->has_error = TRUE;
     snprintf(_hci_state->error_message, sizeof(_hci_state->error_message),
              "Could not set device to non-blocking: %s", strerror(errno));
-    _hci_state->req_data->state = kBleCentralStateUnknown;
+    _hci_state->req_data->state = kBlecentralStateUnknown;
     return;
   }
 
   _hci_state->state = HCI_STATE_OPEN;
 
-  _hci_state->req_data->state = kBleCentralStatePowredOn;
+  _hci_state->req_data->state = kBlecentralStatePoweredOn;
 }
 
 void __do_start_scanning(struct hci_state *_hci_state, int allow_duplicates) {
@@ -262,47 +262,47 @@ void __do_stop_scanning(struct hci_state *_hci_state) {
   _hci_state->state = HCI_STATE_OPEN;
 }
 
-void InitWorker() {
-  BLE_WORKER_INIT_TEMPLATE;
+void InitWorker(uv_work_t *work_req) {
+  BLECENTRAL_WORKER_INIT_TEMPLATE;
 
   struct hci_state *ble = IOTJS_ALLOC(struct hci_state);
 
-  iotjs_blecentral_t *blecentral = iotjs_blecentral_get_instance();
-  blecentral->platform_handle = (void *)ble;
-
+  iotjs_blecentral_set_platform_handle((void *)ble);
+  // platform_handle = (void *)ble;
   ble->req_data = req_data;
 
-  __open_default_hci_device(&ble->hci._hci_state);
+  __open_default_hci_device(ble);
 }
 
-void RunLoopWorker() {
+void RunLoopWorker(uv_work_t *work_req) {
   BLECENTRAL_WORKER_INIT_TEMPLATE;
 
-  struct hci_state *ble =
-      (struct hci_state *)iotjs_blecentral_get_instance()->platform_handle;
+  void *platform_handle = iotjs_blecentral_get_platform_handle();
+  struct hci_state *ble = (struct hci_state *)platform_handle;
 
   ble->req_data = req_data;
 
   _LoopWorker(ble);
 }
 
-void StartScanningWorker(char **suids, int duplicates) {
+void StartScanningWorker(uv_work_t *work_req) {
   BLECENTRAL_WORKER_INIT_TEMPLATE;
 
+  void *platform_handle = iotjs_blecentral_get_platform_handle();
   // need to handle service uuids
-  struct hci_state *ble =
-      (struct hci_state *)iotjs_blecentral_get_instance()->platform_handle;
+  struct hci_state *ble = (struct hci_state *)platform_handle;
 
   ble->req_data = req_data;
 
-  __do_start_scanning(ble, duplicates);
+  __do_start_scanning(ble, req_data->duplicates);
 }
 
-void StopScanningWorker(void) {
+void StopScanningWorker(uv_work_t *work_req) {
   BLECENTRAL_WORKER_INIT_TEMPLATE;
-  struct hci_state *ble =
-      (struct hci_state *)iotjs_blecentral_get_instance()->platform_handle;
 
+  void *platform_handle = iotjs_blecentral_get_platform_handle();
+  struct hci_state *ble = (struct hci_state *)platform_handle;
+  
   ble->req_data = req_data;
 
   __do_stop_scanning(ble);

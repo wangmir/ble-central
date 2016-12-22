@@ -41,11 +41,11 @@
  * (https://github.com/sandeepmistry/noble)
  */
 
-var EventEmitter = require('events').EventEmitter;
+var EventEmiter = require('events').EventEmitter;
 var util = require('util');
-var blecentral = process.binding(process.biding.blecentral);
+var blecentral = process.binding(process.binding.blecentral);
 
-function BleCentral(){
+function Blecentral(){
 
   console.log('start blecentral');
   this.state = 'unknown';
@@ -59,11 +59,11 @@ function BleCentral(){
   this._discoveredPeripheralUuids = [];
   this._discoveries = {};
 
-  EventEmitter.call(this);
+  EventEmiter.call(this);
 
-  this.on('stateChange', this.onStateChange.bind(this));
+  // this.on('stateChange', this.onStateChange.bind(this));
 
-  //TODO: need to implement more functionalities.
+  // TODO: need to implement more functionalities.
 
   this.on('warning', function(message) {
     if(this.listeners('warning').length === 1) {
@@ -71,9 +71,14 @@ function BleCentral(){
     }
   }.bind(this));
 
+  console.log('pre init');
+
   blecentral.init(function(state){
-    this.emit('stateChange', state);
+    // this.emit('stateChange', state);
+    this.onStateChange(state).bind(this);
   }.bind(this));
+
+  console.log('init complete');
 
   process.on('exit', function(){
     if(this._scanState != 'stopped') {
@@ -82,16 +87,19 @@ function BleCentral(){
   }.bind(this));
 }
 
-util.inherits(BleCentral, EventEmitter);
+util.inherits(Blecentral, EventEmiter);
 
-BleCentral.prototype._runLoop = function() {
+Blecentral.prototype._runLoop = function() {
+  console.log('_runLoop');
   if(this._scanState = 'started') {
     blecentral.runLoop(this.loopCallback.bind(this));
   }
 };
 
 // callback function for various event function
-BleCentral.prototype.loopCallback = function(cmd, a1, a2, a3, a4, a5, a6) {
+Blecentral.prototype.loopCallback = function(cmd, a1, a2, a3, a4, a5, a6) {
+
+  console.log('loopcallback');
 
   if(cmd == 'stateChange'){
     // args = state
@@ -106,7 +114,8 @@ BleCentral.prototype.loopCallback = function(cmd, a1, a2, a3, a4, a5, a6) {
   setTimeout(this._runLoop.bind(this), 1000);
 }
 
-BleCentral.prototype.onStateChange = function(state) {
+Blecentral.prototype.onStateChange = function(state) {
+  console.log('on state change');
   this.state = state;
 
   if(state == 'unauthorized'){
@@ -116,8 +125,10 @@ BleCentral.prototype.onStateChange = function(state) {
   this.emit('stateChange', state);
 };
 
-BleCentral.prototype.startScanning = function(serviceUuids,
+Blecentral.prototype.startScanning = function(serviceUuids,
                                               allowDuplicates, callback) {
+
+  console.log('start scanning');
   if(this.state !== 'poweredOn') {
     var error = 'Could not start scanning, state is '
         + this.state + '(not poweredOn)';
@@ -155,7 +166,7 @@ BleCentral.prototype.startScanning = function(serviceUuids,
   }
 };
 
-BleCentral.prototype.stopScanning = function(callback){
+Blecentral.prototype.stopScanning = function(callback){
   this._scanState = 'stopping';
 
   blecentral.stopScanning(function(err) {
@@ -171,7 +182,7 @@ BleCentral.prototype.stopScanning = function(callback){
   }.bind(this));
 };
 
-BleCentral.prototype.leDiscover = function(status, address, addressType,
+Blecentral.prototype.leDiscover = function(status, address, addressType,
                                            connectable, advertisement, rssi) {
   // if(type === 0x04 || discoveryCount > 1 && !hasScanResponse || ...)
 
@@ -201,7 +212,7 @@ BleCentral.prototype.leDiscover = function(status, address, addressType,
   }
 };
 
-BleCentral.prototype.advertisingReport = function(status, type, address,
+Blecentral.prototype.advertisingReport = function(status, type, address,
                                                     addressType, eir, rssi) {
   var previouslyDiscovered = !!this._discoveries[address];
   var advertisement = previouslyDiscovered ?
@@ -245,9 +256,9 @@ BleCentral.prototype.advertisingReport = function(status, type, address,
                   rssi);
 };
 
-function Peripheral(bleCentral, id, address, addressType, connectable,
+function Peripheral(blecentral, id, address, addressType, connectable,
                     advertisement, rssi) {
-  this._bleCentral = bleCentral;
+  this._blecentral = blecentral;
   this.id = id;
   this.uuid = id;
   this.address = address;
@@ -259,4 +270,4 @@ function Peripheral(bleCentral, id, address, addressType, connectable,
   this.state = 'disconnected';
 };
 
-module.exports = new BleCentral();
+module.exports = new Blecentral();

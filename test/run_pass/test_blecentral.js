@@ -14,7 +14,7 @@
  */
 
 var blecentral = require('blecentral');
-/*
+
 blecentral.on('discover', function(peripheral) {
   console.log('"' + peripheral.advertisement.localName + '" entered (RSSI ' +
       peripheral.rssi + ') ' + new Date());
@@ -24,11 +24,9 @@ blecentral.on('stateChange', function(state){
   console.log('onStateChange: ' + state);
 
   if (state == 'poweredOn') {
-    if(state === 'powerOn'){
-      blecentral.startScanning([], true);
-    } else {
-      blecentral.StopScanning();
-    }
+    blecentral.startScanning([], true);
+  } else {
+    blecentral.StopScanning();
   }
 });
-*/
+

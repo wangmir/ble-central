@@ -22,38 +22,38 @@
 #include "iotjs_reqwrap.h"
 
 typedef enum {
-  kBleCentralOpInit,
-  kBleCentralOpStartScanning,
-  kBleCentralOpStopScanning,
-  kBleCentralOpRunLoop,
-} BleCentralOp;
+  kBlecentralOpInit,
+  kBlecentralOpStartScanning,
+  kBlecentralOpStopScanning,
+  kBlecentralOpRunLoop,
+} BlecentralOp;
 
 typedef enum {
-  kBleCentralErrOk = 0,
-  kBleCentralErrInit = -1,
-  kBleCentralErrStart = -2,
-  kBleCentralErrStop = -3,
-} BleCentralError;
+  kBlecentralErrOk = 0,
+  kBlecentralErrInit = -1,
+  kBlecentralErrStart = -2,
+  kBlecentralErrStop = -3,
+} BlecentralError;
 
 typedef enum {
-  kBleCentralStatePoweredOn,
-  kBleCentralStatePoweredOff,
-  kBleCentralStateUnauthorized,
-  kBleCentralStateUnsupported,
-  kBleCentralStateUnknown,
-} BleCentralState;
+  kBlecentralStatePoweredOn,
+  kBlecentralStatePoweredOff,
+  kBlecentralStateUnauthorized,
+  kBlecentralStateUnsupported,
+  kBlecentralStateUnknown,
+} BlecentralState;
 
 typedef enum {
-  kBleCentralCmdStateChange,
-  kBleCentralCmdScanStart,
-  kBleCentralCmdScanStop,
-  kBleCentralCmdAdvertisingReport
-} BleCentralCmd;
+  kBlecentralCmdStateChange,
+  kBlecentralCmdScanStart,
+  kBlecentralCmdScanStop,
+  kBlecentralCmdAdvertisingReport
+} BlecentralCmd;
 
 typedef struct {
-  BleCentralOp op;
-  BleCentralError error;
-  BleCentralState state;
+  BlecentralOp op;
+  BlecentralError error;
+  BlecentralState state;
 
   int cmd;
   int duplicates;
@@ -74,10 +74,9 @@ typedef struct {
   iotjs_blecentral_reqdata_t req_data;
 } IOTJS_VALIDATED_STRUCT(iotjs_blecentral_reqwrap_t);
 
-
-#define THIS iotjs_ble_reqwrap_t* blecentral_reqwrap
+#define THIS iotjs_blecentral_reqwrap_t* blecentral_reqwrap
 iotjs_blecentral_reqwrap_t* iotjs_blecentral_reqwrap_create(
-    const iotjs_jval_t* jcallback, BleCentralOp op);
+    const iotjs_jval_t* jcallback, BlecentralOp op);
 void iotjs_blecentral_reqwrap_dispatched(THIS);
 uv_work_t* iotjs_blecentral_reqwrap_req(THIS);
 const iotjs_jval_t* iotjs_blecentral_reqwrap_jcallback(THIS);
@@ -89,12 +88,14 @@ iotjs_blecentral_reqdata_t* iotjs_blecentral_reqwrap_data(THIS);
 // This blecentral class provides interfaces for bleCentral operation.
 typedef struct {
   iotjs_jobjectwrap_t jobjectwrap;
-  void* platform_handle;
+  void *platform_handle;
 } IOTJS_VALIDATED_STRUCT(iotjs_blecentral_t);
 
 iotjs_blecentral_t* iotjs_blecentral_create(const iotjs_jval_t* jblecentral);
 const iotjs_jval_t* iotjs_blecentral_get_jblecentral();
 iotjs_blecentral_t* iotjs_blecentral_get_instance();
+void iotjs_blecentral_set_platform_handle(void *handle);
+void *iotjs_blecentral_get_platform_handle();
 
 void InitWorker(uv_work_t* work_req);
 void StartScanningWorker(uv_work_t* work_req);
